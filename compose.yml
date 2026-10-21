@@ -21,6 +21,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   kafka:
     image: apache/kafka:4.3.2
     environment:
@@ -52,6 +53,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.8.1
     command: start-dev --import-realm
@@ -77,6 +79,70 @@ services:
       timeout: 5s
       retries: 10
       start_period: 60s
+      
+  apicurio:
+    image: apicurio/apicurio-registry:3.3.3
+    environment:
+      APICURIO_STORAGE_KIND: sql
+      APICURIO_STORAGE_SQL_KIND: postgresql
+      APICURIO_DATASOURCE_URL: jdbc:postgresql://postgres:5432/apicurio
+      APICURIO_DATASOURCE_USERNAME: apicurio
+      APICURIO_DATASOURCE_PASSWORD: ${APICURIO_DB_PASSWORD}
+      APICURIO_RULES_GLOBAL_COMPATIBILITY: FULL
+      QUARKUS_HTTP_CORS_ORIGINS: http://localhost:8086
+    ports:
+      - "127.0.0.1:8085:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:9000/health/ready > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  apicurio-ui:
+    image: apicurio/apicurio-registry-ui:3.3.3
+    environment:
+      REGISTRY_API_URL: http://localhost:8085/apis/registry/v3
+    ports:
+      - "127.0.0.1:8086:8080"
+    depends_on:
+      apicurio:
+        condition: service_healthy
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/ > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  pact-broker:
+    image: pactfoundation/pact-broker:2.107.0.1
+    environment:
+      PACT_BROKER_DATABASE_ADAPTER: postgres
+      PACT_BROKER_DATABASE_HOST: postgres
+      PACT_BROKER_DATABASE_NAME: pactbroker
+      PACT_BROKER_DATABASE_USERNAME: pactbroker
+      PACT_BROKER_DATABASE_PASSWORD: ${PACT_BROKER_DB_PASSWORD}
+      PACT_BROKER_BASIC_AUTH_USERNAME: pact
+      PACT_BROKER_BASIC_AUTH_PASSWORD: ${PACT_BROKER_PASSWORD}
+      PACT_BROKER_PUBLIC_HEARTBEAT: "true"
+      PACT_BROKER_PORT: "9292"
+    ports:
+      - "127.0.0.1:9292:9292"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:9292/diagnostic/status/heartbeat"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 volumes:
   postgres-data:
   kafka-data:
