@@ -1,0 +1,8 @@
+name: payments-ledger
+
+services: {}
+
+volumes:
+  postgres-data:
+  kafka-data:
+  grafana-data:
