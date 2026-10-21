@@ -1,0 +1,15 @@
+{
+    "realm": "payments-ledger",
+    "displayName": "Payments Ledger",
+    "enabled": true,
+    "clients": [
+        {
+            "clientId": "smoke-test",
+            "name": "Smoke test (Phase 0 only)",
+            "enabled": true,
+            "publicClient": true,
+            "standardFlowEnabled": false,
+            "directAccessGrantsEnabled": true
+        }
+    ]
+}
