@@ -1,3 +1,6 @@
+#!/bin/sh
+# Creates every payments-ledger Kafka topic. Safe to run again: existing topics are left alone.
+# Run inside the Kafka container: docker compose exec kafka sh /opt/payments-ledger/kafka/create-topics.sh
 set -eu
 
 BOOTSTRAP=localhost:9092
@@ -8,7 +11,7 @@ MONTH=2592000000 # 30 days
 FOREVER=-1 # forever
 
 create() {
-  echo "-> $1 (retention $2"
+  echo "-> $1 (retention $2)"
   "$TOPICS" --bootstrap-server "$BOOTSTRAP" --create --if-not-exists \
     --topic "$1" --partitions 3 --replication-factor 1 \
     --config retention.ms="$2"
@@ -20,7 +23,7 @@ create transfer.replies "$WEEK"
 
 create transfer.events "$FOREVER"
 create ledger.events "$FOREVER"
-create screening.events "$FOREVER"
+create customer.events "$FOREVER"
 
 for t in ledger.commands screening.commands transfer.replies transfer.events ledger.events customer.events; do
   create "$t.dlq" "$MONTH"
