@@ -46,6 +46,7 @@ services:
       - "127.0.0.1:9092:9092"
     volumes:
       - kafka-data:/var/lib/kafka/data
+      - ./config/kafka:/opt/payments-ledger/kafka:ro
     mem_limit: 1g
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null"]
